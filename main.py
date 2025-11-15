@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import PhotoImage
 import os
 import time
+import random
 
 from PIL import Image, ImageTk
 
@@ -34,7 +35,20 @@ class Widget(Tk):
     self.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x, self.y))
     
     # Movement direction (-1 for left, 1 for right)
-    self.direction = -1
+    self.direction = random.choice([-1, 1])
+    self.direction_change_timer = time.time()
+    self.direction_change_interval = random.uniform(10, 15)  # Random interval between 3-7 seconds
+    
+    # Dragging variables
+    self.dragging = False
+    self.drag_offset_x = 0
+    self.drag_offset_y = 0
+    
+    # Falling variables
+    self.falling = False
+    self.velocity_y = 0
+    self.gravity = 0.5
+    self.target_y = self.screen_height - self.height - 50
 
     self.frame = Frame(self, bg='pink')
     self.frame.pack()
@@ -68,23 +82,69 @@ class Widget(Tk):
     self.label.pack()
 
     # --- Make window draggable ---
-    #self.label.bind("<Button-1>", self.start_move)
-    #self.label.bind("<B1-Motion>", self.do_move)
+    self.label.bind("<Button-1>", self.start_drag)
+    self.label.bind("<B1-Motion>", self.do_drag)
+    self.label.bind("<ButtonRelease-1>", self.stop_drag)
     
     # Start the animation
     self.update_animation()
   
+  def start_drag(self, event):
+    self.dragging = True
+    # Store the offset from the window's top-left corner to the mouse position
+    self.drag_offset_x = event.x
+    self.drag_offset_y = event.y
+  
+  def do_drag(self, event):
+    if self.dragging:
+      # Calculate new position based on mouse position and offset
+      self.x = self.winfo_pointerx() - self.drag_offset_x
+      self.y = self.winfo_pointery() - self.drag_offset_y
+      self.geometry('160x200+{x}+{y}'.format(x=self.x, y=self.y))
+  
+  def stop_drag(self, event):
+    self.dragging = False
+    # Start falling animation
+    self.falling = True
+    self.velocity_y = 0
+  
   def update_animation(self):
-    # move by one pixel in current direction
-    self.x += self.direction
+    # Handle falling animation
+    if self.falling:
+      self.velocity_y += self.gravity
+      self.y += self.velocity_y
+      
+      # Check if reached the taskbar
+      if self.y >= self.target_y:
+        self.y = self.target_y
+        self.falling = False
+        self.velocity_y = 0
+      
+      self.geometry('160x200+{x}+{y}'.format(x=int(self.x), y=int(self.y)))
     
-    # Check boundaries and reverse direction if needed
-    if self.x <= 0:
-      self.x = 0
-      self.direction = 1  # Change to move right
-    elif self.x >= self.screen_width - self.width:
-      self.x = self.screen_width - self.width
-      self.direction = -1  # Change to move left
+    # Only move automatically if not being dragged or falling
+    elif not self.dragging:
+      # Randomly change direction every few seconds
+      if time.time() > self.direction_change_timer + self.direction_change_interval:
+        # Sometimes change direction, sometimes keep going
+        if random.random() < 0.5:  # 50% chance to change direction
+          self.direction *= -1
+        self.direction_change_timer = time.time()
+        self.direction_change_interval = random.uniform(3, 7)
+      
+      # move by one pixel in current direction
+      self.x += self.direction
+      
+      # Check boundaries and reverse direction if needed
+      if self.x <= 0:
+        self.x = 0
+        self.direction = 1  # Change to move right
+      elif self.x >= self.screen_width - self.width:
+        self.x = self.screen_width - self.width
+        self.direction = -1  # Change to move left
+      
+      # update window position
+      self.geometry('160x200+{x}+{y}'.format(x=self.x, y=self.y))
     
     # advance frame if 50ms have passed
     if time.time() > self.timestamp + 0.05:
@@ -92,8 +152,6 @@ class Widget(Tk):
       # advance the frame by one, wrap back to 0 at the end
       self.frame_index = (self.frame_index + 1) % len(self.frames)
     
-    # update window position
-    self.geometry('160x200+{x}+{y}'.format(x=self.x, y=self.y))
     # update the image
     self.label.configure(image=self.frames[self.frame_index])
     
