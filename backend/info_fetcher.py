@@ -2,10 +2,6 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-
-openweather_APIkey = "be8ff55134dc777d8aaa03d93bd78662"
-news_APIkey = "1dbbb7ae82c84c87b25de7fe22658c70"
-
 #default location if there is no location provided
 loc = { 
     "lat": 42.728,
@@ -37,7 +33,7 @@ def getNewsData(loc):
         print("Couldn't fetch news data:", e)
         return None
     
-def main():
+def main(openweather_APIkey, news_APIkey):
     air_data = getAirPollutionData(loc, openweather_APIkey)
 
     news_data = getNewsData(loc)
@@ -48,5 +44,3 @@ def main():
             print(f"URL: {article['url']}\n")
     else:
         print("No news data available.")
-
-main();
