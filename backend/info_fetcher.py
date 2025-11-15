@@ -21,7 +21,7 @@ def getAirPollutionData(loc, key):
         return None
     
 def getNewsData(loc):
-    date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d') 
+    date_from = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d')    
     query = "environmental protection OR climate change OR renewable energy"
     newsURL = (f"https://newsapi.org/v2/everything?q={query}$language=en&from={date}&sortBy=popularity&apiKey={news_APIkey}")
     try:
