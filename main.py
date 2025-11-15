@@ -16,7 +16,7 @@ class Widget(Tk):
     self.attributes("-topmost", True)
 
      # --- OS-specific transparency ---
-    # Windows
+    # Windows (pink is the color that we make transparent)
     try:
       self.wm_attributes("-transparentcolor", "pink")
     except TclError:
@@ -57,37 +57,24 @@ class Widget(Tk):
     self.bQuit = Button(self.frame, text="Quit", command=self.quit)
     self.bQuit.pack(pady=20)
 
-    # Load GIF frames
+    # Load spritesheet
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    gif_path = os.path.join(script_dir, "assets", "spinCat.gif")
-    
-    self.frames = []
-    gif = Image.open(gif_path)
-    
-    # Extract all frames from the GIF
-    try:
-      while True:
-        frame = gif.copy().convert("RGBA")
-        self.frames.append(ImageTk.PhotoImage(frame))
-        gif.seek(gif.tell() + 1)
-    except EOFError:
-      pass  # End of GIF frames
-    
+    sheet_path = os.path.join(script_dir, "assets", "american_marten.png")
+    self.frames = self.split_spritesheet(sheet_path, 1, 4, 32)
     # Animation variables
     self.frame_index = 0
     self.timestamp = time.time()
-    
     # create the label that holds the image
     self.label = Label(self.frame, image=self.frames[0], bg="pink")
     self.label.pack()
+    # Start the animation
+    self.update_animation()
 
     # --- Make window draggable ---
     self.label.bind("<Button-1>", self.start_drag)
     self.label.bind("<B1-Motion>", self.do_drag)
     self.label.bind("<ButtonRelease-1>", self.stop_drag)
     
-    # Start the animation
-    self.update_animation()
   
   def start_drag(self, event):
     self.dragging = True
@@ -107,6 +94,26 @@ class Widget(Tk):
     # Start falling animation
     self.falling = True
     self.velocity_y = 0
+
+  def split_spritesheet(self, sheet_path, rows, cols, frame_size):
+    frames = []
+    spritesheet = Image.open(sheet_path).convert("RGBA")
+    # Extract all frames from the spritesheet
+    try:
+      rows = 1
+      cols = 4
+      frame_size = 32
+      for row in range(rows):
+        for col in range(cols):
+          x = col * frame_size
+          y = row * frame_size
+          box = (x, y, x + frame_size, y + frame_size)
+          frame = spritesheet.crop(box)
+          frame.resize((1000, 160), Image.NEAREST)
+          frames.append(ImageTk.PhotoImage(frame))
+    except EOFError:
+      pass  # End of spritesheet frames
+    return frames
   
   def update_animation(self):
     # Handle falling animation
@@ -147,7 +154,7 @@ class Widget(Tk):
       self.geometry('160x200+{x}+{y}'.format(x=self.x, y=self.y))
     
     # advance frame if 50ms have passed
-    if time.time() > self.timestamp + 0.05:
+    if time.time() > self.timestamp + 0.15:
       self.timestamp = time.time()
       # advance the frame by one, wrap back to 0 at the end
       self.frame_index = (self.frame_index + 1) % len(self.frames)
