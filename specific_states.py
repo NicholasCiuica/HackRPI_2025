@@ -21,7 +21,7 @@ class Idle_State(State):
 
 class Move_State(State):
   def __init__(self, direction=0):
-    super().__init__("move", move_path, 4, True, 4, 5)
+    super().__init__("move", move_path, 4, True, 6, 7)
     #determines whether pet will move left (-1) or right for this movement
     if direction == 0:
       self.direction = random.choice([-1, 1])
@@ -37,14 +37,14 @@ class Dragged_State(State):
 class Chat_State(State):
   def __init__(self, custom_message=None):
     # Increase duration to 10 seconds if it's a custom message (news tip)
-    # Keep 6 seconds for regular messages
+    # Keep 5 seconds for regular messages
     
     if custom_message:
       super().__init__("chat", idle_path, 4, True, 10, 10)
       self.message = custom_message
       self.is_news = True
     else:
-      super().__init__("chat", idle_path, 4, True, 6, 6)
+      super().__init__("chat", idle_path, 4, True, 5, 5)
       self.messages = [
         "Hello!",
         "I'm sleepy...",
