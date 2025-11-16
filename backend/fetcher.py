@@ -3,28 +3,17 @@ import json
 from datetime import datetime, timedelta
 from ratelimit import limits, sleep_and_retry
 
-#api call cooldown time
-ONE_HOUR = 0
 #default location if there is no location provided
 loc = { 
     "lat": 42.728,
     "lon": -73.687
 }
 
-@sleep_and_retry
-@limits(calls=1, period=ONE_HOUR)
-def rateLimitedCall(url):
-    """Function to enforce API rate limiting"""
-    response = requests.get(url); 
-    if response.status_code != 200:
-        raise Exception('API response: {}'.format(response.status_code))
-    return response
-
 def getAirPollutionData(loc, key):
     AirPollutionURL = (f"https://api.openweathermap.org/data/2.5/air_pollution"
                     f"?lat={loc['lat']}&lon={loc['lon']}&appid={key}")
     try: 
-        response = rateLimitedCall(AirPollutionURL)
+        response = requests.get(AirPollutionURL)
         airpollution_data = response.json()
         return airpollution_data
     except Exception as e:
@@ -37,7 +26,7 @@ def getNewsData(key):
     newsURL = (f"https://newsapi.org/v2/everything?q={query}&language=en&from={date_from}&sortBy=relevancy"
                f"&excludeDomains=yankodesign.com&pageSize=5&apiKey={key}")
     try:
-        response = rateLimitedCall(newsURL)
+        response = requests.get(newsURL)
         news_data = response.json()
             
         return news_data
