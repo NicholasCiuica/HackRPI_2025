@@ -1,5 +1,6 @@
 import random
 import os
+import time
 
 from state import State
 
@@ -10,7 +11,7 @@ idle_path = os.path.join(script_dir, "assets", "american_marten.png")
 
 class Sleep_State(State):
   def __init__(self):
-    super().__init__("sleep", sleep_path, 2, False)
+    super().__init__("sleep", sleep_path, 4, False)
 
 class Idle_State(State):
   def __init__(self):
@@ -26,3 +27,17 @@ class Move_State(State):
       self.direction = -1
     else:
       self.direction = 1
+
+class Chat_State(State):
+  def __init__(self):
+    super().__init__("chat", idle_path, 4, True, 3, 5)
+    self.messages = [
+      "Hello!",
+      "I'm sleepy...",
+      "Pet me! ",
+      "Having a good day?",
+      "Let's be friends!",
+      "I love walking around!",
+      "What's up?"
+    ]
+    self.message = random.choice(self.messages)
