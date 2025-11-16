@@ -76,7 +76,12 @@ class Widget(Tk):
     self.canvas.bind("<Button-1>", self.canvas_mouse_press_down)
     
   def canvas_mouse_press_down(self, event):
-    self.pet_state = Idle_State()
+    match self.pet_state.name:
+      case "sleep":
+        self.pet_state = Idle_State()
+      case "idle":
+        #TODO: TRIGGER MCP AND TEXTBLOCK
+        pass
   
   def start_drag(self, event):
     self.dragging = True
