@@ -6,10 +6,6 @@ from preparer import get_mcp_resources, parse_resources
 
 mcp = FastMCP("marten")
 
-# Constants
-AQI_API_KEY = "be8ff55134dc777d8aaa03d93bd78662"
-NWS_API_KEY = "1dbbb7ae82c84c87b25de7fe22658c70"
-
 air_data = getAirPollutionData(loc, AQI_API_KEY)
 news_data = getNewsData(NWS_API_KEY)
 
