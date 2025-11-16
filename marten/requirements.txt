@@ -1,0 +1,7 @@
+fastmcp
+google-generativeai
+mcp
+httpx
+requests
+pillow
+

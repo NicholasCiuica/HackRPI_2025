@@ -89,6 +89,78 @@ async def get_news() -> str:
     """Get the latest environmental news articles"""
     return await get_environmental_news()
 
+@mcp.tool()
+async def rate_news_sentiment(title: str, description: str) -> int:
+    """Rate the environmental sustainability sentiment of a news article from 0-10
+    
+    Rating Scale:
+    0 = Neutral/Informational news with no clear positive or negative environmental impact
+    1 = Worst possible news (catastrophic environmental disasters, massive emissions increases)
+    2-4 = Bad news (worsening conditions, negative developments, setbacks)
+    5 = Slightly negative or mixed with more negative than positive
+    6 = Slightly positive or mixed with more positive than negative
+    7-9 = Good news (positive developments, progress, declining emissions)
+    10 = Best possible news (major breakthroughs, dramatic improvements)
+    
+    Args:
+        title: The news article title
+        description: Brief description of the article
+    
+    Returns:
+        A rating from 0 to 10
+    """
+    import google.generativeai as genai
+    
+    # Configure Gemini API
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDgjIZ081SovuPrjQ5VdOfoJTgnbsGHDHE")
+    genai.configure(api_key=GEMINI_API_KEY)
+    
+    model = genai.GenerativeModel('gemini-pro')
+    
+    prompt = f"""You are a sustainability news sentiment analyzer. Your task is to rate news articles about environmental sustainability on a scale from 0 to 10.
+
+Rating Scale:
+0 = Neutral/Informational news with no clear positive or negative environmental impact
+1 = Worst possible news (catastrophic environmental disasters, massive emissions increases, major policy failures)
+2-4 = Bad news (worsening conditions, negative developments, setbacks)
+5 = Slightly negative or mixed with more negative than positive
+6 = Slightly positive or mixed with more positive than negative
+7-9 = Good news (positive developments, progress, declining emissions, successful initiatives)
+10 = Best possible news (major breakthroughs, dramatic improvements, transformative solutions)
+
+Focus on the actual environmental impact and trajectory for sustainability, not just the tone of writing.
+
+Examples:
+"Emissions could already be declining" → 8
+"Arctic ice reaches record low" → 2
+"New climate policy under debate" → 0
+"Renewable energy surpasses fossil fuels globally" → 9
+"Minor improvements in recycling rates" → 6
+
+Input:
+Title: {title}
+Description: {description}
+
+Output format: Return ONLY a single number from 0 to 10, nothing else."""
+
+    try:
+        response = model.generate_content(prompt)
+        rating_text = response.text.strip()
+        
+        # Extract just the number
+        import re
+        match = re.search(r'\d+', rating_text)
+        if match:
+            rating = int(match.group())
+            # Ensure rating is within bounds
+            rating = max(0, min(10, rating))
+            return rating
+        else:
+            return 0  # Default to neutral if can't parse
+    except Exception as e:
+        print(f"Error rating sentiment: {e}")
+        return 0
+
 if __name__ == "__main__":
     # Test output
     resources = parsed['resources']

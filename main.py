@@ -6,6 +6,7 @@ import time
 import random
 
 from specific_states import Sleep_State, Idle_State, Move_State, Chat_State
+from marten_integration import get_marten_integration
 
 class Widget(Tk):
   def __init__(self):
@@ -66,8 +67,13 @@ class Widget(Tk):
     
     # Chat text box
     self.chat_label = None
-    self.chat_display_duration = 5  # Duration in seconds to show chat box (adjustable)
+    self.chat_display_duration = 10  # Duration in seconds to show chat box (adjustable)
     self.chat_start_time = 0
+    
+    # Marten integration
+    self.marten = get_marten_integration()
+    self.marten.start()
+    self.last_news_check = time.time()
     
     # Create sprite on canvas
     self.sprite = self.canvas.create_image(self.pet_x, self.pet_y, 
@@ -145,9 +151,10 @@ class Widget(Tk):
       
       self.dragging = False
   
-  def show_chat(self):
+  def show_chat(self, custom_message=None):
+    """Show chat message near the pet"""
     # Switch to chat state
-    self.pet_state = Chat_State()
+    self.pet_state = Chat_State(custom_message)
     self.anim_index = 0
     
     # Record when chat started
@@ -165,9 +172,10 @@ class Widget(Tk):
     self.chat_label = self.canvas.create_text(
       text_x, text_y,
       text=self.pet_state.message,
-      font=("Arial", 12, "bold"),
+      font=("Arial", 10, "bold"),
       fill="black",
-      justify="center"
+      justify="center",
+      width=300  # Wrap text at 300 pixels
     )
     
     # Create background rectangle for text
@@ -176,8 +184,8 @@ class Widget(Tk):
     self.chat_bg = self.canvas.create_rectangle(
       bbox[0] - padding, bbox[1] - padding,
       bbox[2] + padding, bbox[3] + padding,
-      fill="white",
-      outline="black",
+      fill="lightblue" if custom_message else "white",
+      outline="darkblue" if custom_message else "black",
       width=2
     )
     # Move text to front
@@ -229,6 +237,20 @@ class Widget(Tk):
       if self.pet_state.name == "chat":
         self.pet_state = Idle_State()
         self.anim_index = 0
+    
+    # Check for new messages from Marten (every 5 seconds)
+    if time.time() > self.last_news_check + 5:
+      self.last_news_check = time.time()
+      message = self.marten.get_next_message()
+      
+      if message and not self.chat_label and not self.dragging:
+        # Display the sustainability tip from Marten
+        tip_text = message['text']
+        if message.get('rating') is not None:
+          emoji = "🌟" if message['rating'] >= 7 else "⚠️" if message['rating'] <= 4 else "📰"
+          tip_text = f"{emoji} {tip_text}"
+        
+        self.show_chat(tip_text)
 
     # check if the current state has run out of duration
     if self.pet_state.has_duration and time.time() > self.pet_state.start_time + self.pet_state.duration:
