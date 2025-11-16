@@ -93,7 +93,6 @@ class Widget(Tk):
         self.pet_state = Idle_State()
         return
       case _:
-        self.pet_state = Dragged_State()
         self.start_drag(event)
 
   def start_drag(self, event):
@@ -109,6 +108,8 @@ class Widget(Tk):
   
   def do_drag(self, event):
     if self.dragging:
+      if self.target_y - self.pet_y > 50:
+        self.pet_state = Dragged_State()
       # Calculate new position based on mouse position and offset
       self.pet_x = event.x - self.drag_offset_x
       self.pet_y = event.y - self.drag_offset_y
