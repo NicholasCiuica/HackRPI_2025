@@ -22,8 +22,8 @@ def getAirPollutionData(loc, key):
     
 def getNewsData(key):
     date_from = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d')    
-    query = "environmental protection OR climate change OR renewable energy"
-    newsURL = (f"https://newsapi.org/v2/everything?q={query} -business&language=en&from={date_from}&sortBy=relevancy&excludeDomains=hbr.org,finance.yahoo.com&apiKey={key}")
+    query = "environmental protection OR climate change OR renewable energy NOT business NOT finance"
+    newsURL = (f"https://newsapi.org/v2/everything?q={query}&language=en&from={date_from}&sortBy=relevancy&excludeDomains=hbr.org, finance.yahoo.com, yankodesign.com&apiKey={key}")
     try:
         response = requests.get(newsURL)
         response.raise_for_status()  # Raise an error for bad responses
