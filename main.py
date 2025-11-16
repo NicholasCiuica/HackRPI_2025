@@ -5,7 +5,7 @@ import os
 import time
 import random
 
-from specific_states import Sleep_State, Idle_State, Move_State, Chat_State
+from specific_states import Sleep_State, Idle_State, Move_State, Dragged_State, Chat_State
 from marten_integration import get_marten_integration
 
 class Widget(Tk):
@@ -59,7 +59,7 @@ class Widget(Tk):
     self.falling = False
     self.velocity_y = 0
     self.gravity = 0.5
-    self.target_y = self.screen_height - self.pet_height - 100
+    self.target_y = self.screen_height - self.pet_height - self.screen_bottom_offset
 
     # Animation variables
     self.anim_index = 0
@@ -93,6 +93,7 @@ class Widget(Tk):
         self.pet_state = Idle_State()
         return
       case _:
+        self.pet_state = Dragged_State()
         self.start_drag(event)
 
   def start_drag(self, event):
@@ -222,6 +223,13 @@ class Widget(Tk):
             self.pet_x = self.screen_width - self.pet_width
             self.pet_state = Move_State(-1)
             self.pet_direction = -1
+          # Update sprite position on canvas
+          self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
+        case _:
+          if self.pet_x <= 0:
+            self.pet_x = 0
+          elif self.pet_x >= self.screen_width - self.pet_width:
+            self.pet_x = self.screen_width - self.pet_width
           # Update sprite position on canvas
           self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
     
