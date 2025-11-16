@@ -43,7 +43,7 @@ class MartenIntegration:
         while self.running:
             try:
                 await self._fetch_and_generate_tip()
-                await asyncio.sleep(60)  # Fetch new tip every 60 seconds
+                await asyncio.sleep(30)  # Fetch new tip every 60 seconds
             except Exception as e:
                 print(f"Error in Marten MCP integration: {e}")
                 import traceback
