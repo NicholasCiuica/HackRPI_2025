@@ -70,10 +70,13 @@ class Widget(Tk):
     self.update_animation()
 
     # --- Make sprite draggable ---
-    self.canvas.bind("<Button-1>", self.start_drag)
-    self.canvas.bind("<B1-Motion>", self.do_drag)
-    self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
+    # self.canvas.bind("<Button-1>", self.start_drag)
+    # self.canvas.bind("<B1-Motion>", self.do_drag)
+    # self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
+    self.canvas.bind("<Button-1>", self.canvas_mouse_press_down)
     
+  def canvas_mouse_press_down(self, event):
+    self.pet_state = Idle_State()
   
   def start_drag(self, event):
     self.dragging = True
@@ -101,11 +104,12 @@ class Widget(Tk):
       self.velocity_y += self.gravity
       self.pet_y += self.velocity_y
       
-      # Check if reached the target position
+      # Check if pet has reached the ground
       if self.pet_y >= self.target_y:
         self.pet_y = self.target_y
         self.falling = False
         self.velocity_y = 0
+        self.pet_state = Idle_State
       
       self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
     
