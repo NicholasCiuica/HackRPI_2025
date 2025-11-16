@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from ratelimit import limits, sleep_and_retry
 
 #api call cooldown time
-ONE_HOUR = 1800 
+ONE_HOUR = 0
 #default location if there is no location provided
 loc = { 
     "lat": 42.728,

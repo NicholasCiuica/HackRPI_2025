@@ -80,19 +80,21 @@ def parse_news_resource(news_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         }
     
     try:
+        # Pick one random article
         article = random.choice(news_data['articles'])
         formatted = {
-            "title": article.get('title'),
-            "description": article.get('description'),
-            "source": article.get('source', {}).get('name'),
-            "published_at": article.get('publishedAt'),
-            "url": article.get('url')
+            "title": article.get('title', 'No title'),
+            "description": article.get('description', 'No description'),
+            "source": article.get('source', {}).get('name', 'Unknown'),
+            "published_at": article.get('publishedAt', ''),
+            "url": article.get('url', '')
         }
         
+        # Return as a list with one article for consistency with iteration
         return {
             "uri": "environment://news/latest",
-            "total_results": news_data.get('totalResults'),
-            "articles": formatted
+            "total_results": news_data.get('totalResults', 0),
+            "articles": [formatted]  # Single article in a list
         }
     except Exception as e:
         return {

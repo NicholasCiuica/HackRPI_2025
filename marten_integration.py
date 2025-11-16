@@ -121,8 +121,8 @@ class MartenIntegration:
                     air_result = await session.call_tool(
                         "check_air_quality",
                         arguments={
-                            "lat": location['lat'],
-                            "lon": location['lon']
+                            "latitude": location['lat'],
+                            "longitude": location['lon']
                         }
                     )
                     air_content = air_result.content[0].text if air_result.content else "No air quality data"
@@ -132,23 +132,27 @@ class MartenIntegration:
                     # Extract AQI from air quality response
                     air_quality_str = "No air quality data"
                     aqi_match = re.search(r'AQI:\s*(\d+)', air_content)
-                    category_match = re.search(r'Status:\s*([^\n]+)', air_content)
-                    if aqi_match and category_match:
-                        air_quality_str = f"AQI: {aqi_match.group(1)} ({category_match.group(1).strip()})"
+                    if aqi_match:
+                        air_quality_str = f"Air Quality Rating: {aqi_match.group(1)}"
                     
                     print(f"DEBUG: Parsed air quality: {air_quality_str}")
                     
                     # Generate sustainability tip using Gemini
-                    prompt = f"""Based on this environmental news and air quality data, generate a short, actionable sustainability tip (max 60 characters).
+                    prompt = f"""You are generating a sustainability tip based on a SPECIFIC news article. The tip MUST directly relate to the topic mentioned in the news article.
 
-Air Quality: {air_quality_str}
+News Article Title: {article_title}
+News Article Description: {article_desc if article_desc else ''}
 
-Recent News: {article_title}
-{article_desc if article_desc else ''}
+Current Air Quality: {air_quality_str}
+News Sentiment: {rating}/10
 
-Sentiment Rating: {rating}/10 (0=neutral, 10=best)
+Create a SHORT, ACTIONABLE tip (max 60 characters) that directly relates to the specific topic in this article. For example:
+- If the article is about renewable energy → tip about solar panels or clean energy
+- If the article is about deforestation → tip about tree planting or paper use
+- If the article is about ocean pollution → tip about plastic reduction or beach cleanup
+- If the article is about electric vehicles → tip about transportation choices
 
-Generate a friendly, concise tip that relates to this news. Keep it under 60 characters. Focus on what individuals can do."""
+The tip MUST be specific to the article's topic, not a generic sustainability message. Keep it under 60 characters."""
 
                     response = self.model.generate_content(prompt)
                     tip = response.text.strip().strip('"\'')
@@ -162,8 +166,8 @@ Generate a friendly, concise tip that relates to this news. Keep it under 60 cha
                     if not article_blurb:
                         article_blurb = article_title[:80] + "..." if len(article_title) > 80 else article_title
                     
-                    # Format the message with tip and article info
-                    formatted_message = f"Here's a tip:\n{tip}\n\n{article_blurb}"
+                    # Format the message with tip, article info, and air quality
+                    formatted_message = f"Here's a tip:\n{tip}\n\n{article_blurb}\n\n{air_quality_str}"
                     
                     # Add to message queue for the pet to display
                     self.message_queue.put({

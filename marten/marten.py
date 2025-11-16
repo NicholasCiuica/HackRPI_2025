@@ -70,12 +70,13 @@ async def get_environmental_news() -> str:
     if "error" in result:
         return result["error"]
     
-    article = result['article']
+    output = f"Latest Environmental News ({result['total_results']} articles):\n\n"
     
-    output = f"Environmental News (randomly selected from {result['selected_from']} articles):\n\n"  
-    output += f"   Source: {article['source']}\n"
-    output += f"   {article['description']}\n"
-    output += f"   URL: {article['url']}\n\n"
+    for i, article in enumerate(result['articles'], 1):
+        output += f"{i}. {article['title']}\n"
+        output += f"   Source: {article['source']}\n"
+        output += f"   {article['description']}\n"
+        output += f"   URL: {article['url']}\n\n"
     
     return output
 
