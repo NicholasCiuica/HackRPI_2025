@@ -1,7 +1,6 @@
 import requests
 import json
 from datetime import datetime, timedelta
-from ratelimit import limits, sleep_and_retry
 
 #default location if there is no location provided
 loc = { 
