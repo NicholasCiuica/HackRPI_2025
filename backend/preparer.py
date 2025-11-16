@@ -9,7 +9,6 @@ AQI_CATEGORIES = {
     5: "Very Poor"
 }
 
-
 def get_mcp_resources() -> List[Dict[str, str]]:
     # MCP resource templates
     return [
