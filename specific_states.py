@@ -36,10 +36,11 @@ class Dragged_State(State):
 
 class Chat_State(State):
   def __init__(self, custom_message=None):
-    # Increase duration to 20-25 seconds if it's a custom message (news tip)
+    # Increase duration to 10 seconds if it's a custom message (news tip)
     # Keep 6 seconds for regular messages
+    
     if custom_message:
-      super().__init__("chat", idle_path, 4, True, 10, 15)
+      super().__init__("chat", idle_path, 4, True, 10, 10)
       self.message = custom_message
       self.is_news = True
     else:

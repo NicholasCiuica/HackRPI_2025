@@ -68,6 +68,7 @@ class Widget(Tk):
     
     # Chat text box
     self.chat_label = None
+    self.emotion_label = None
     
     # Marten integration
     self.marten = get_marten_integration()
@@ -121,6 +122,10 @@ class Widget(Tk):
         self.canvas.delete(self.chat_label)
         self.canvas.delete(self.chat_bg)
         self.chat_label = None
+
+      if self.emotion_label:
+        self.canvas.delete(self.emotion_label)
+        self.emotion_label = None
   
   def stop_drag(self, event):
     if self.dragging:
@@ -142,8 +147,8 @@ class Widget(Tk):
     self.pet_state = Chat_State(custom_message)
     self.anim_index = 0
     
-    # Calculate position for text box
-    text_x, text_y = self.calculate_text_position()
+    # Calculate position for text box, given an offset based on the kind of message
+    text_x, text_y = self.calculate_text_position(150 if custom_message else 50)
     
     # Remove existing chat label if present
     if self.chat_label:
@@ -173,26 +178,57 @@ class Widget(Tk):
     # Move text to front
     self.canvas.tag_raise(self.chat_label)
 
-  def calculate_text_position(self):
+  def show_emotion(self, metric):
+    """Show emotion icon based on metric (0-10)
+    0-4: sad_icon, 5-6: info_icon, 7-10: happy_icon"""
+    # Determine which icon to display
+    if metric <= 4:
+      icon_path = "assets/sad_icon.png"
+    elif metric <= 6:
+      icon_path = "assets/info_icon.png"
+    else:
+      icon_path = "assets/happy_icon.png"
+    
+    # Load and resize the icon
+    icon_image = Image.open(icon_path).convert("RGBA")
+    icon_image = icon_image.resize((80, 80), Image.NEAREST)
+    self.emotion_photoimage = ImageTk.PhotoImage(icon_image)
+    
+    # Calculate position for emotion icon (above the pet)
+    emotion_x = self.pet_x + self.pet_width // 2
+    emotion_y = self.pet_y - 30
+    
+    # Remove existing emotion label if present
+    if self.emotion_label:
+      self.canvas.delete(self.emotion_label)
+      self.emotion_label = None
+    
+    # Create emotion icon on canvas
+    self.emotion_label = self.canvas.create_image(
+      emotion_x, emotion_y,
+      image=self.emotion_photoimage,
+      anchor="center"
+    )
+
+  def calculate_text_position(self, text_offset):
     # Calculate available space on each side
     space_left = self.pet_x
     space_right = self.screen_width - (self.pet_x + self.pet_width)
-    space_top = self.pet_y
-    space_bottom = self.screen_height - self.screen_bottom_offset - (self.pet_y + self.pet_height)
+    #space_top = self.pet_y
+    #space_bottom = self.screen_height - self.screen_bottom_offset - (self.pet_y + self.pet_height)
     
     # Determine which side has the most room
-    max_space = max(space_left, space_right, space_top, space_bottom)
-    
-    text_offset = 20  # Distance from pet
+    max_space = max(space_left, space_right) #, space_top, space_bottom)
     
     if max_space == space_right: # Position to the right
       return (self.pet_x + self.pet_width + text_offset, self.pet_y + self.pet_height // 2)
-    elif max_space == space_left: # Position to the left
+    #elif max_space == space_left: # Position to the left
+    else:
       return (self.pet_x - text_offset, self.pet_y + self.pet_height // 2)
-    elif max_space == space_top: # Position above
-      return (self.pet_x + self.pet_width // 2, self.pet_y - text_offset)
-    else: # Position below
-      return (self.pet_x + self.pet_width // 2, self.pet_y + self.pet_height + text_offset)
+    #elif max_space == space_top: # Position above
+    #  return (self.pet_x + self.pet_width // 2, self.pet_y - text_offset)
+    #else: # Position below
+    #  return (self.pet_x + self.pet_width // 2, self.pet_y + self.pet_height + text_offset)
 
   def update_animation(self):
     # Handle falling animation
@@ -251,6 +287,7 @@ class Widget(Tk):
         if message.get('rating') is not None:
           emoji = ":D" if message['rating'] >= 7 else "T^T" if message['rating'] <= 4 else ">.<"
           tip_text = f"{emoji} {tip_text}"
+          self.show_emotion(message['rating'])
         
         self.show_chat(tip_text)
 
@@ -271,6 +308,9 @@ class Widget(Tk):
             self.canvas.delete(self.chat_label)
             self.canvas.delete(self.chat_bg)
             self.chat_label = None
+          if self.emotion_label:
+            self.canvas.delete(self.emotion_label)
+            self.emotion_label = None
     
     # Update the image on canvas
     next_image = self.pet_state.anim_frames[self.anim_index]
