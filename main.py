@@ -45,12 +45,7 @@ class Widget(Tk):
     # Calculate position x and y coordinates
     self.pet_x = self.screen_width - self.pet_width
     self.pet_y = self.screen_height - self.pet_height - self.screen_bottom_offset
-    
-    # Movement direction (-1 for left, 1 for right)
-    # self.direction = random.choice([-1, 1])
-    # self.direction_change_timer = time.time()
-    # self.direction_change_interval = random.uniform(10, 15)  # Random interval between 3-7 seconds
-    
+
     # Dragging variables
     self.dragging = False
     self.drag_offset_x = 0
@@ -62,11 +57,6 @@ class Widget(Tk):
     self.gravity = 0.5
     self.target_y = self.screen_height - self.pet_height - 100
 
-    # Load spritesheets
-    # script_dir = os.path.dirname(os.path.abspath(__file__))
-    # sheet_path = os.path.join(script_dir, "assets", "american_marten.png")
-    # self.idle_anim = self.split_spritesheet(sheet_path, 1, 4, 32, 160)
-    
     # Animation variables
     self.anim_index = 0
     self.pet_state = Sleep_State()
@@ -105,26 +95,6 @@ class Widget(Tk):
     self.falling = True
     self.velocity_y = 0
 
-  # def split_spritesheet(self, sheet_path, rows, cols, frame_size, new_frame_size):
-  #   frames = []
-  #   spritesheet = Image.open(sheet_path).convert("RGBA")
-  #   # Extract all frames from the spritesheet
-  #   try:
-  #     rows = 1
-  #     cols = 4
-  #     frame_size = 32
-  #     for row in range(rows):
-  #       for col in range(cols):
-  #         x = col * frame_size
-  #         y = row * frame_size
-  #         box = (x, y, x + frame_size, y + frame_size)
-  #         frame = spritesheet.crop(box)
-  #         frame = frame.resize((new_frame_size, new_frame_size), Image.NEAREST)
-  #         frames.append(ImageTk.PhotoImage(frame))
-  #   except EOFError:
-  #     pass  # End of spritesheet frames
-  #   return frames
-  
   def update_animation(self):
     # Handle falling animation
     if self.falling:
@@ -141,29 +111,17 @@ class Widget(Tk):
     
     # Only move automatically if not being dragged or falling
     elif not self.dragging:
-      # Randomly change direction every few seconds
-      # if time.time() > self.direction_change_timer + self.direction_change_interval:
-        # Sometimes change direction, sometimes keep going
-        # if random.random() < 0.5:  # 50% chance to change direction
-        #   self.direction *= -1
-        #self.direction_change_timer = time.time()
-        #self.direction_change_interval = random.uniform(3, 7)
       
       match self.pet_state.name:
         case "move":
           self.pet_x += self.pet_state.direction
-      # move by one pixel in current direction
-      # self.pet_x += self.direction
           # Check boundaries and reverse direction if needed
           if self.pet_x <= 0:
             self.pet_x = 0
             self.pet_state = Move_State(1)
-            #self.direction = 1  # Change to move right
           elif self.pet_x >= self.screen_width - self.pet_width:
             self.pet_x = self.screen_width - self.pet_width
             self.pet_state = Move_State(-1)
-            #self.direction = -1  # Change to move left
-          
           # Update sprite position on canvas
           self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
     
