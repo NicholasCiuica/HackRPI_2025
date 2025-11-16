@@ -46,6 +46,7 @@ class Widget(Tk):
     # Calculate position x and y coordinates
     self.pet_x = self.screen_width - self.pet_width
     self.pet_y = self.screen_height - self.pet_height - self.screen_bottom_offset
+    self.pet_direction = -1 #left
 
     # Dragging variables
     self.dragging = False
@@ -67,8 +68,6 @@ class Widget(Tk):
     
     # Chat text box
     self.chat_label = None
-    self.chat_display_duration = 10  # Duration in seconds to show chat box (adjustable)
-    self.chat_start_time = 0
     
     # Marten integration
     self.marten = get_marten_integration()
@@ -76,42 +75,26 @@ class Widget(Tk):
     self.last_news_check = time.time()
     
     # Create sprite on canvas
+    starting_image = self.pet_state.anim_frames[0]
     self.sprite = self.canvas.create_image(self.pet_x, self.pet_y, 
-                                           image=self.pet_state.anim_frames[0], anchor="nw")
+                                           image=ImageTk.PhotoImage(starting_image), anchor="nw")
     
     # Start the animation
     self.update_animation()
 
     # --- Make sprite draggable ---
-    self.canvas.bind("<Button-1>", self.start_drag)
+    self.canvas.bind("<Button-1>", self.pet_mouse_click_down)
     self.canvas.bind("<B1-Motion>", self.do_drag)
     self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
-  
-  def calculate_text_position(self):
-    # Calculate available space on each side
-    space_left = self.pet_x
-    space_right = self.screen_width - (self.pet_x + self.pet_width)
-    space_top = self.pet_y
-    space_bottom = self.screen_height - self.screen_bottom_offset - (self.pet_y + self.pet_height)
-    
-    # Determine which side has the most room
-    max_space = max(space_left, space_right, space_top, space_bottom)
-    
-    text_offset = 20  # Distance from pet
-    
-    if max_space == space_right:
-      # Position to the right
-      return (self.pet_x + self.pet_width + text_offset, self.pet_y + self.pet_height // 2)
-    elif max_space == space_left:
-      # Position to the left
-      return (self.pet_x - text_offset, self.pet_y + self.pet_height // 2)
-    elif max_space == space_top:
-      # Position above
-      return (self.pet_x + self.pet_width // 2, self.pet_y - text_offset)
-    else:
-      # Position below
-      return (self.pet_x + self.pet_width // 2, self.pet_y + self.pet_height + text_offset)
-  
+
+  def pet_mouse_click_down(self, event):
+    match self.pet_state.name:
+      case "sleep":
+        self.pet_state = Idle_State()
+        return
+      case _:
+        self.start_drag(event)
+
   def start_drag(self, event):
     # Check if click is on the pet sprite
     sprite_bbox = self.canvas.bbox(self.sprite)
@@ -157,9 +140,6 @@ class Widget(Tk):
     self.pet_state = Chat_State(custom_message)
     self.anim_index = 0
     
-    # Record when chat started
-    self.chat_start_time = time.time()
-    
     # Calculate position for text box
     text_x, text_y = self.calculate_text_position()
     
@@ -191,6 +171,27 @@ class Widget(Tk):
     # Move text to front
     self.canvas.tag_raise(self.chat_label)
 
+  def calculate_text_position(self):
+    # Calculate available space on each side
+    space_left = self.pet_x
+    space_right = self.screen_width - (self.pet_x + self.pet_width)
+    space_top = self.pet_y
+    space_bottom = self.screen_height - self.screen_bottom_offset - (self.pet_y + self.pet_height)
+    
+    # Determine which side has the most room
+    max_space = max(space_left, space_right, space_top, space_bottom)
+    
+    text_offset = 20  # Distance from pet
+    
+    if max_space == space_right: # Position to the right
+      return (self.pet_x + self.pet_width + text_offset, self.pet_y + self.pet_height // 2)
+    elif max_space == space_left: # Position to the left
+      return (self.pet_x - text_offset, self.pet_y + self.pet_height // 2)
+    elif max_space == space_top: # Position above
+      return (self.pet_x + self.pet_width // 2, self.pet_y - text_offset)
+    else: # Position below
+      return (self.pet_x + self.pet_width // 2, self.pet_y + self.pet_height + text_offset)
+
   def update_animation(self):
     # Handle falling animation
     if self.falling:
@@ -216,9 +217,11 @@ class Widget(Tk):
           if self.pet_x <= 0:
             self.pet_x = 0
             self.pet_state = Move_State(1)
+            self.pet_direction = 1
           elif self.pet_x >= self.screen_width - self.pet_width:
             self.pet_x = self.screen_width - self.pet_width
             self.pet_state = Move_State(-1)
+            self.pet_direction = -1
           # Update sprite position on canvas
           self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
     
@@ -227,17 +230,7 @@ class Widget(Tk):
       self.frame_start_time = time.time()
       # Advance the frame by one, wrap back to 0 at the end
       self.anim_index = (self.anim_index + 1) % self.pet_state.num_frames
-    
-    # Auto-remove chat box after specified duration
-    if self.chat_label and time.time() > self.chat_start_time + self.chat_display_duration:
-      self.canvas.delete(self.chat_label)
-      self.canvas.delete(self.chat_bg)
-      self.chat_label = None
-      # Transition from chat state to idle if still in chat
-      if self.pet_state.name == "chat":
-        self.pet_state = Idle_State()
-        self.anim_index = 0
-    
+  
     # Check for new messages from Marten (every 5 seconds)
     if time.time() > self.last_news_check + 5:
       self.last_news_check = time.time()
@@ -254,25 +247,28 @@ class Widget(Tk):
 
     # check if the current state has run out of duration
     if self.pet_state.has_duration and time.time() > self.pet_state.start_time + self.pet_state.duration:
+      # Reset animations and textboxes
       self.anim_index = 0
-      
-      # Remove chat text box if transitioning from chat state
-      if self.pet_state.name == "chat":
-        if self.chat_label:
-          self.canvas.delete(self.chat_label)
-          self.canvas.delete(self.chat_bg)
-          self.chat_label = None
       
       match self.pet_state.name:
         case "idle":
           self.pet_state = Move_State()
+          self.pet_direction = self.pet_state.direction
         case "move":
           self.pet_state = Idle_State()
         case "chat":
           self.pet_state = Idle_State()
+          if self.chat_label:
+            self.canvas.delete(self.chat_label)
+            self.canvas.delete(self.chat_bg)
+            self.chat_label = None
     
     # Update the image on canvas
-    self.canvas.itemconfig(self.sprite, image=self.pet_state.anim_frames[self.anim_index])
+    next_image = self.pet_state.anim_frames[self.anim_index]
+    if self.pet_direction == 1: # flip the image if the pet moved right
+      next_image = next_image.transpose(Image.FLIP_LEFT_RIGHT)
+    self.pet_image = ImageTk.PhotoImage(next_image)
+    self.canvas.itemconfig(self.sprite, image=self.pet_image)
     
     # Call update after 10ms
     self.after(10, self.update_animation)

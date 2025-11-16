@@ -27,7 +27,7 @@ class State():
           box = (x, y, x + frame_size, y + frame_size)
           frame = spritesheet.crop(box)
           frame = frame.resize((new_frame_size, new_frame_size), Image.NEAREST)
-          frames.append(ImageTk.PhotoImage(frame))
+          frames.append(frame)
     except EOFError:
       pass  # End of spritesheet frames
     return frames
