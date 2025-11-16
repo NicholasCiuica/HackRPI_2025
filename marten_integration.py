@@ -115,6 +115,8 @@ class MartenIntegration:
                     rating = int(match.group()) if match else 5
                     rating = max(0, min(10, rating))
                     
+                    print(f"DEBUG: Sentiment rating: {rating}/10 (raw response: {rating_text})")
+                    
                     # Get air quality using the MCP tool
                     air_result = await session.call_tool(
                         "check_air_quality",
@@ -125,12 +127,16 @@ class MartenIntegration:
                     )
                     air_content = air_result.content[0].text if air_result.content else "No air quality data"
                     
+                    print(f"DEBUG: Air quality content received:\n{air_content[:300]}")
+                    
                     # Extract AQI from air quality response
                     air_quality_str = "No air quality data"
                     aqi_match = re.search(r'AQI:\s*(\d+)', air_content)
                     category_match = re.search(r'Status:\s*([^\n]+)', air_content)
                     if aqi_match and category_match:
                         air_quality_str = f"AQI: {aqi_match.group(1)} ({category_match.group(1).strip()})"
+                    
+                    print(f"DEBUG: Parsed air quality: {air_quality_str}")
                     
                     # Generate sustainability tip using Gemini
                     prompt = f"""Based on this environmental news and air quality data, generate a short, actionable sustainability tip (max 60 characters).
@@ -151,10 +157,18 @@ Generate a friendly, concise tip that relates to this news. Keep it under 60 cha
                     if len(tip) > 80:
                         tip = tip[:77] + "..."
                     
+                    # Create article blurb (short summary, max 100 chars)
+                    article_blurb = article_desc[:100] + "..." if len(article_desc) > 100 else article_desc
+                    if not article_blurb:
+                        article_blurb = article_title[:80] + "..." if len(article_title) > 80 else article_title
+                    
+                    # Format the message with tip and article info
+                    formatted_message = f"Here's a tip:\n{tip}\n\n{article_blurb}"
+                    
                     # Add to message queue for the pet to display
                     self.message_queue.put({
                         'type': 'tip',
-                        'text': tip,
+                        'text': formatted_message,
                         'rating': rating,
                         'article': article_title[:50] + "..." if len(article_title) > 50 else article_title
                     })

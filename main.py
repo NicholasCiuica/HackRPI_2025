@@ -249,7 +249,7 @@ class Widget(Tk):
         # Display the sustainability tip from Marten
         tip_text = message['text']
         if message.get('rating') is not None:
-          emoji = "🌟" if message['rating'] >= 7 else "⚠️" if message['rating'] <= 4 else "📰"
+          emoji = ":D" if message['rating'] >= 7 else "T^T" if message['rating'] <= 4 else ">.<"
           tip_text = f"{emoji} {tip_text}"
         
         self.show_chat(tip_text)
