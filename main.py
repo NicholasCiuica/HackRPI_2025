@@ -181,13 +181,16 @@ class Widget(Tk):
   def show_emotion(self, metric):
     """Show emotion icon based on metric (0-10)
     0-4: sad_icon, 5-6: info_icon, 7-10: happy_icon"""
+    # Get script directory for absolute paths
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     # Determine which icon to display
     if metric <= 4:
-      icon_path = "assets/sad_icon.png"
+      icon_path = os.path.join(script_dir, "assets", "sad_icon.png")
     elif metric <= 6:
-      icon_path = "assets/info_icon.png"
+      icon_path = os.path.join(script_dir, "assets", "info_icon.png")
     else:
-      icon_path = "assets/happy_icon.png"
+      icon_path = os.path.join(script_dir, "assets", "happy_icon.png")
     
     # Load and resize the icon
     icon_image = Image.open(icon_path).convert("RGBA")
