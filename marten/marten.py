@@ -123,7 +123,7 @@ async def rate_news_sentiment(title: str, description: str) -> int:
         A rating from 0 to 10
     """
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = f"""You are a sustainability news sentiment analyzer. Your task is to rate news articles about environmental sustainability on a scale from 0 to 10.
 
@@ -168,27 +168,36 @@ Output format: Return ONLY a single number from 0 to 10, nothing else."""
         return 0
 
 
+# # ============================================================================
+# # Test Output (when run directly)
+# # ============================================================================
+
+# if __name__ == "__main__":
+#     resources = parsed['resources']
+#     print("Available resources:", resources)
+
+#     # Get air quality data
+#     if "error" not in parsed['data']['air_quality']:
+#         air_quality = parsed['data']['air_quality']
+#         print(f"\nAir Quality: {air_quality['air_quality_index']['category']}")
+#         print(f"Location: {air_quality['location']}")
+#         if 'pollutants' in air_quality:
+#             print(f"PM2.5: {air_quality['pollutants']['pm2_5']} μg/m³")
+
+#     # Get environmental news
+#     if "error" not in parsed['data']['environmental_news']:
+#         news = parsed['data']['environmental_news']
+#         print(f"\nNews articles: {news['total_results']} total")
+#         for article in news['articles'][:3]:
+#             print(f"  - {article['title']}")
+#             if article['description']:
+#                 print(f"    {article['description'][:100]}...\n")
+
+
 # ============================================================================
-# Test Output (when run directly)
+# Run MCP Server
 # ============================================================================
 
 if __name__ == "__main__":
-    resources = parsed['resources']
-    print("Available resources:", resources)
-
-    # Get air quality data
-    if "error" not in parsed['data']['air_quality']:
-        air_quality = parsed['data']['air_quality']
-        print(f"\nAir Quality: {air_quality['air_quality_index']['category']}")
-        print(f"Location: {air_quality['location']}")
-        if 'pollutants' in air_quality:
-            print(f"PM2.5: {air_quality['pollutants']['pm2_5']} μg/m³")
-
-    # Get environmental news
-    if "error" not in parsed['data']['environmental_news']:
-        news = parsed['data']['environmental_news']
-        print(f"\nNews articles: {news['total_results']} total")
-        for article in news['articles'][:3]:
-            print(f"  - {article['title']}")
-            if article['description']:
-                print(f"    {article['description'][:100]}...\n")
+    # Run the MCP server
+    mcp.run()
