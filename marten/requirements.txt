@@ -4,4 +4,5 @@ mcp
 httpx
 requests
 pillow
+ratelimit
 

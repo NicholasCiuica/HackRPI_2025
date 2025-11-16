@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, Optional, List
+import random
 
 AQI_CATEGORIES = {
     1: "Good",
@@ -79,20 +80,19 @@ def parse_news_resource(news_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         }
     
     try:
-        articles = []
-        for article in news_data['articles'][:5]:
-            articles.append({
-                "title": article.get('title'),
-                "description": article.get('description'),
-                "source": article.get('source', {}).get('name'),
-                "published_at": article.get('publishedAt'),
-                "url": article.get('url')
-            })
+        article = random.choice(news_data['articles'])
+        formatted = {
+            "title": article.get('title'),
+            "description": article.get('description'),
+            "source": article.get('source', {}).get('name'),
+            "published_at": article.get('publishedAt'),
+            "url": article.get('url')
+        }
         
         return {
             "uri": "environment://news/latest",
             "total_results": news_data.get('totalResults'),
-            "articles": articles
+            "articles": formatted
         }
     except Exception as e:
         return {
