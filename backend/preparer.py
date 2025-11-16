@@ -55,6 +55,13 @@ def parse_air_quality_resource(air_data: Optional[Dict[str, Any]],
                 "value": aqi_value,
                 "category": AQI_CATEGORIES.get(aqi_value, "Unknown")
             },
+            "pollutants": {
+                "co": components.get('co'),
+                "no2": components.get('no2'),
+                "o3": components.get('o3'),
+                "pm2_5": components.get('pm2_5'),
+                "pm10": components.get('pm10')
+            }
         }
     except (KeyError, IndexError) as e:
         return {
@@ -79,6 +86,7 @@ def parse_news_resource(news_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
                 "description": article.get('description'),
                 "source": article.get('source', {}).get('name'),
                 "published_at": article.get('publishedAt'),
+                "url": article.get('url')
             })
         
         return {
