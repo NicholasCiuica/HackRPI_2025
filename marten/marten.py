@@ -2,21 +2,33 @@ from typing import Any
 import httpx
 import os
 import sys
+import re
+import google.generativeai as genai
 from mcp.server.fastmcp import FastMCP
 
 # Add backend directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
 
 from fetcher import getAirPollutionData, getNewsData, loc
-from preparer import get_mcp_resources, parse_resources
+from preparer import get_mcp_resources, parse_resources, parse_air_quality_resource, parse_news_resource
 
+# Initialize MCP server
 mcp = FastMCP("marten")
 
+# Get API keys from environment variables (with fallback for testing)
+AQI_API_KEY = os.getenv("OPENWEATHER_API_KEY", "be8ff55134dc777d8aaa03d93bd78662")
+NWS_API_KEY = os.getenv("NEWS_API_KEY", "1dbbb7ae82c84c87b25de7fe22658c70")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDgjIZ081SovuPrjQ5VdOfoJTgnbsGHDHE")
+
+# Fetch initial data
 air_data = getAirPollutionData(loc, AQI_API_KEY)
 news_data = getNewsData(NWS_API_KEY)
-
-# Parse resources
 parsed = parse_resources(air_data, news_data, loc)
+
+
+# ============================================================================
+# MCP Resources
+# ============================================================================
 
 @mcp.resource("environment://air-quality/{lat}/{lon}")
 async def get_air_quality(lat: float, lon: float) -> str:
@@ -27,7 +39,6 @@ async def get_air_quality(lat: float, lon: float) -> str:
     if not air_data:
         return "Unable to fetch air quality data"
     
-    from preparer import parse_air_quality_resource
     result = parse_air_quality_resource(air_data, lat, lon)
     
     if "error" in result:
@@ -45,6 +56,7 @@ Pollutants:
   - PM2.5: {pollutants['pm2_5']} μg/m³
   - PM10: {pollutants['pm10']} μg/m³"""
 
+
 @mcp.resource("environment://news/latest")
 async def get_environmental_news() -> str:
     """Get latest environmental news"""
@@ -53,7 +65,6 @@ async def get_environmental_news() -> str:
     if not news_data:
         return "Unable to fetch news data"
     
-    from preparer import parse_news_resource
     result = parse_news_resource(news_data)
     
     if "error" in result:
@@ -69,6 +80,11 @@ async def get_environmental_news() -> str:
     
     return output
 
+
+# ============================================================================
+# MCP Tools
+# ============================================================================
+
 @mcp.tool()
 async def check_air_quality(latitude: float, longitude: float) -> str:
     """Check air quality for any location by coordinates
@@ -79,10 +95,12 @@ async def check_air_quality(latitude: float, longitude: float) -> str:
     """
     return await get_air_quality(latitude, longitude)
 
+
 @mcp.tool()
 async def get_news() -> str:
     """Get the latest environmental news articles"""
     return await get_environmental_news()
+
 
 @mcp.tool()
 async def rate_news_sentiment(title: str, description: str) -> int:
@@ -104,12 +122,7 @@ async def rate_news_sentiment(title: str, description: str) -> int:
     Returns:
         A rating from 0 to 10
     """
-    import google.generativeai as genai
-    
-    # Configure Gemini API
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDgjIZ081SovuPrjQ5VdOfoJTgnbsGHDHE")
     genai.configure(api_key=GEMINI_API_KEY)
-    
     model = genai.GenerativeModel('gemini-pro')
     
     prompt = f"""You are a sustainability news sentiment analyzer. Your task is to rate news articles about environmental sustainability on a scale from 0 to 10.
@@ -143,21 +156,23 @@ Output format: Return ONLY a single number from 0 to 10, nothing else."""
         rating_text = response.text.strip()
         
         # Extract just the number
-        import re
         match = re.search(r'\d+', rating_text)
         if match:
             rating = int(match.group())
             # Ensure rating is within bounds
-            rating = max(0, min(10, rating))
-            return rating
+            return max(0, min(10, rating))
         else:
             return 0  # Default to neutral if can't parse
     except Exception as e:
         print(f"Error rating sentiment: {e}")
         return 0
 
+
+# ============================================================================
+# Test Output (when run directly)
+# ============================================================================
+
 if __name__ == "__main__":
-    # Test output
     resources = parsed['resources']
     print("Available resources:", resources)
 
@@ -177,4 +192,3 @@ if __name__ == "__main__":
             print(f"  - {article['title']}")
             if article['description']:
                 print(f"    {article['description'][:100]}...\n")
-    
