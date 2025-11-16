@@ -82,7 +82,6 @@ class Widget(Tk):
     self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
   
   def calculate_text_position(self):
-    """Calculate the best position for the text box based on available space"""
     # Calculate available space on each side
     space_left = self.pet_x
     space_right = self.screen_width - (self.pet_x + self.pet_width)
@@ -147,7 +146,6 @@ class Widget(Tk):
       self.dragging = False
   
   def show_chat(self):
-    """Show chat message near the pet"""
     # Switch to chat state
     self.pet_state = Chat_State()
     self.anim_index = 0
