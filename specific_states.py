@@ -9,6 +9,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sleep_path = os.path.join(script_dir, "assets", "american_marten_sleep.png")
 idle_path = os.path.join(script_dir, "assets", "american_marten.png")
 move_path = os.path.join(script_dir, "assets", "american_marten_move.png")
+dragged_path = os.path.join(script_dir, "assets", "american_marten_uppies.png")
 
 class Sleep_State(State):
   def __init__(self):
@@ -28,6 +29,10 @@ class Move_State(State):
       self.direction = -1
     else:
       self.direction = 1
+
+class Dragged_State(State):
+  def __init__(self):
+    super().__init__("dragged", dragged_path, 4, False)
 
 class Chat_State(State):
   def __init__(self, custom_message=None):

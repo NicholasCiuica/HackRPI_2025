@@ -5,7 +5,7 @@ import os
 import time
 import random
 
-from specific_states import Sleep_State, Idle_State, Move_State, Chat_State
+from specific_states import Sleep_State, Idle_State, Move_State, Dragged_State, Chat_State
 from marten_integration import get_marten_integration
 
 class Widget(Tk):
@@ -59,7 +59,7 @@ class Widget(Tk):
     self.falling = False
     self.velocity_y = 0
     self.gravity = 0.5
-    self.target_y = self.screen_height - self.pet_height - 100
+    self.target_y = self.screen_height - self.pet_height - self.screen_bottom_offset
 
     # Animation variables
     self.anim_index = 0
@@ -108,6 +108,8 @@ class Widget(Tk):
   
   def do_drag(self, event):
     if self.dragging:
+      if self.target_y - self.pet_y > 50:
+        self.pet_state = Dragged_State()
       # Calculate new position based on mouse position and offset
       self.pet_x = event.x - self.drag_offset_x
       self.pet_y = event.y - self.drag_offset_y
@@ -224,6 +226,13 @@ class Widget(Tk):
             self.pet_direction = -1
           # Update sprite position on canvas
           self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
+        case _:
+          if self.pet_x <= 0:
+            self.pet_x = 0
+          elif self.pet_x >= self.screen_width - self.pet_width:
+            self.pet_x = self.screen_width - self.pet_width
+          # Update sprite position on canvas
+          self.canvas.coords(self.sprite, self.pet_x, self.pet_y)
     
     # Advance frame when enough time has passed
     if time.time() > self.frame_start_time + 0.15:
@@ -240,7 +249,7 @@ class Widget(Tk):
         # Display the sustainability tip from Marten
         tip_text = message['text']
         if message.get('rating') is not None:
-          emoji = "🌟" if message['rating'] >= 7 else "⚠️" if message['rating'] <= 4 else "📰"
+          emoji = ":D" if message['rating'] >= 7 else "T^T" if message['rating'] <= 4 else ">.<"
           tip_text = f"{emoji} {tip_text}"
         
         self.show_chat(tip_text)
