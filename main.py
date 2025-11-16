@@ -5,7 +5,7 @@ import os
 import time
 import random
 
-from specific_states import Sleep_State, Idle_State, Move_State, Chat_State
+from specific_states import Sleep_State, Idle_State, Move_State, Dragged_State, Chat_State
 from marten_integration import get_marten_integration
 
 class Widget(Tk):
@@ -93,6 +93,7 @@ class Widget(Tk):
         self.pet_state = Idle_State()
         return
       case _:
+        self.pet_state = Dragged_State()
         self.start_drag(event)
 
   def start_drag(self, event):
