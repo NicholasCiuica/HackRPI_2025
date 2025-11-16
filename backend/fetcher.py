@@ -13,6 +13,7 @@ def getAirPollutionData(loc, key):
                     f"?lat={loc['lat']}&lon={loc['lon']}&appid={key}")
     try: 
         response = requests.get(AirPollutionURL)
+        response.raise_for_status()
         airpollution_data = response.json()
         return airpollution_data
     except Exception as e:
@@ -26,6 +27,7 @@ def getNewsData(key):
                f"&excludeDomains=yankodesign.com&pageSize=5&apiKey={key}")
     try:
         response = requests.get(newsURL)
+        response.raise_for_status()
         news_data = response.json()
             
         return news_data
