@@ -20,10 +20,10 @@ def getAirPollutionData(loc, key):
         print("Couldn't fetch airpollution data:", e)
         return None
     
-def getNewsData(loc):
+def getNewsData(key):
     date_from = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d')    
     query = "environmental protection OR climate change OR renewable energy"
-    newsURL = (f"https://newsapi.org/v2/everything?q={query}$language=en&from={date}&sortBy=popularity&apiKey={news_APIkey}")
+    newsURL = (f"https://newsapi.org/v2/everything?q={query}&language=en&from={date_from}&sortBy=popularity&apiKey={key}")
     try:
         response = requests.get(newsURL)
         response.raise_for_status()  # Raise an error for bad responses
@@ -33,14 +33,13 @@ def getNewsData(loc):
         print("Couldn't fetch news data:", e)
         return None
     
-def main(openweather_APIkey, news_APIkey):
-    air_data = getAirPollutionData(loc, openweather_APIkey)
-
-    news_data = getNewsData(loc)
-    if news_data and 'articles' in news_data:
-        for article in news_data['articles'][:5]:  # Print top 5 articles
-            print(f"Title: {article['title']}")
-            print(f"Description: {article['description']}")
-            print(f"URL: {article['url']}\n")
-    else:
-        print("No news data available.")
+def main(AQI_API_KEY, NEWS_API_KEY):
+    air_data = getAirPollutionData(loc, AQI_API_KEY)
+    if air_data:
+        with open('airPollutionData.json', 'w') as AQI_FILE:
+            json.dump(air_data, AQI_FILE, indent=2)
+    
+    news_data = getNewsData(NEWS_API_KEY)
+    if news_data:
+        with open('newsData.json', 'w') as NEWS_FILE:
+            json.dump(news_data, NEWS_FILE, indent=2)
